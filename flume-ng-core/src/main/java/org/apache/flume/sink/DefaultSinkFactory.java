@@ -25,6 +25,7 @@ import org.apache.flume.FlumeException;
 import org.apache.flume.Sink;
 import org.apache.flume.SinkFactory;
 import org.apache.flume.conf.sink.SinkType;
+import org.apache.flume.plugins.PluginsClassLoaderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,7 @@ public class DefaultSinkFactory implements SinkFactory {
       sinkClassName = sinkType.getSinkClassName();
     }
     try {
-      return (Class<? extends Sink>) Class.forName(sinkClassName);
+      return (Class<? extends Sink>) PluginsClassLoaderFactory.getClass(sinkClassName);
     } catch (Exception ex) {
       throw new FlumeException("Unable to load sink type: " + type
           + ", class: " + sinkClassName, ex);

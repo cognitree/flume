@@ -24,6 +24,7 @@ import org.apache.flume.FlumeException;
 import org.apache.flume.Source;
 import org.apache.flume.SourceFactory;
 import org.apache.flume.conf.source.SourceType;
+import org.apache.flume.plugins.PluginsClassLoaderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +64,7 @@ public class DefaultSourceFactory implements SourceFactory {
       sourceClassName = srcType.getSourceClassName();
     }
     try {
-      return (Class<? extends Source>) Class.forName(sourceClassName);
+      return (Class<? extends Source>) PluginsClassLoaderFactory.getClass(sourceClassName);
     } catch (Exception ex) {
       throw new FlumeException("Unable to load source type: " + type
           + ", class: " + sourceClassName, ex);

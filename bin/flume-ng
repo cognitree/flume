@@ -265,6 +265,10 @@ case "$mode" in
     ;;
 esac
 
+if [ -z "${FLUME_HOME}" ]; then
+  FLUME_HOME=$(cd $(dirname $0)/..; pwd)
+fi
+
 args=""
 while [ -n "$*" ] ; do
   arg=$1
@@ -314,6 +318,9 @@ while [ -n "$*" ] ; do
   esac
 done
 
+# append plugins path to args
+args="$args --plugins-path ${opt_plugins_dirs:-${FLUME_HOME}/plugins.d}"
+
 # make opt_conf absolute
 if [[ -n "$opt_conf" && -d "$opt_conf" ]]; then
   opt_conf=$(cd $opt_conf; pwd)
@@ -336,10 +343,6 @@ if [ -n "${opt_classpath}" ]; then
   fi
 fi
 
-if [ -z "${FLUME_HOME}" ]; then
-  FLUME_HOME=$(cd $(dirname $0)/..; pwd)
-fi
-
 # prepend $FLUME_HOME/lib jars to the specified classpath (if any)
 if [ -n "${FLUME_CLASSPATH}" ] ; then
   FLUME_CLASSPATH="${FLUME_HOME}/lib/*:$FLUME_CLASSPATH"
@@ -355,32 +358,16 @@ else
   PLUGINS_DIRS="${FLUME_HOME}/plugins.d"
 fi
 
-unset plugin_lib plugin_libext plugin_native
+unset plugin_native
 for PLUGINS_DIR in $PLUGINS_DIRS; do
   if [[ -d ${PLUGINS_DIR} ]]; then
     for plugin in ${PLUGINS_DIR}/*; do
-      if [[ -d "$plugin/lib" ]]; then
-        plugin_lib="${plugin_lib}${plugin_lib+:}${plugin}/lib/*"
-      fi
-      if [[ -d "$plugin/libext" ]]; then
-        plugin_libext="${plugin_libext}${plugin_libext+:}${plugin}/libext/*"
-      fi
       if [[ -d "$plugin/native" ]]; then
         plugin_native="${plugin_native}${plugin_native+:}${plugin}/native"
       fi
     done
   fi
 done
-
-if [[ -n "${plugin_lib}" ]]
-then
-  FLUME_CLASSPATH="${FLUME_CLASSPATH}:${plugin_lib}"
-fi
-
-if [[ -n "${plugin_libext}" ]]
-then
-  FLUME_CLASSPATH="${FLUME_CLASSPATH}:${plugin_libext}"
-fi
 
 if [[ -n "${plugin_native}" ]]
 then

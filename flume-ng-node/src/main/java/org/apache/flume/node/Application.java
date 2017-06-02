@@ -41,6 +41,7 @@ import org.apache.flume.lifecycle.LifecycleAware;
 import org.apache.flume.lifecycle.LifecycleState;
 import org.apache.flume.lifecycle.LifecycleSupervisor;
 import org.apache.flume.lifecycle.LifecycleSupervisor.SupervisorPolicy;
+import org.apache.flume.plugins.PluginsClassLoaderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -259,6 +260,11 @@ public class Application {
       option = new Option("h", "help", false, "display help text");
       options.addOption(option);
 
+      option = new Option(null, "plugins-path", true,
+          "colon-separated list of plugins.d directories");
+      option.setRequired(true);
+      options.addOption(option);
+
       CommandLineParser parser = new GnuParser();
       CommandLine commandLine = parser.parse(options, args);
 
@@ -273,6 +279,12 @@ public class Application {
       if (commandLine.hasOption('z') || commandLine.hasOption("zkConnString")) {
         isZkConfigured = true;
       }
+
+      // initialize class loader factory from the plugins path
+      // this will isolate Flume agent plugins to their own classloader
+      String pluginsPath = commandLine.getOptionValue("plugins-path");
+      PluginsClassLoaderFactory.initialize(pluginsPath);
+
       Application application = null;
       if (isZkConfigured) {
         // get options
