@@ -46,16 +46,18 @@ public class PluginsClassLoaderFactory {
   private static final Map<String, ClassLoader> classLoadersMap = new HashMap<>();
 
   public static void initialize(String pluginsPath) {
-    FileFilter dirFilter = new NameFileFilter(new String[]{"lib", "libext"});
-    for (String pluginsDir : pluginsPath.split("\\:")) {
-      File pluginsRoot = new File(pluginsDir);
-      if (pluginsRoot.isDirectory()) {
-        final File[] plugins = pluginsRoot.listFiles();
-        if (plugins != null) {
-          for (File plugin : plugins) {
-            if (plugin.isDirectory()) {
-              final File[] files = plugin.listFiles(dirFilter);
-              initializePluginClassLoader(files);
+    if(pluginsPath != null && !pluginsPath.isEmpty()) {
+      FileFilter dirFilter = new NameFileFilter(new String[]{"lib", "libext"});
+      for (String pluginsDir : pluginsPath.split("\\:")) {
+        File pluginsRoot = new File(pluginsDir);
+        if (pluginsRoot.isDirectory()) {
+          final File[] plugins = pluginsRoot.listFiles();
+          if (plugins != null) {
+            for (File plugin : plugins) {
+              if (plugin.isDirectory()) {
+                final File[] files = plugin.listFiles(dirFilter);
+                initializePluginClassLoader(files);
+              }
             }
           }
         }

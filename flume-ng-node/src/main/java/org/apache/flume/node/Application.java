@@ -262,7 +262,7 @@ public class Application {
 
       option = new Option(null, "plugins-path", true,
           "colon-separated list of plugins.d directories");
-      option.setRequired(true);
+      option.setRequired(false);
       options.addOption(option);
 
       CommandLineParser parser = new GnuParser();

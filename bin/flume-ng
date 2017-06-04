@@ -170,6 +170,8 @@ global options:
   --plugins-path <dirs>     colon-separated list of plugins.d directories. See the
                             plugins.d section in the user guide for more details.
                             Default: \$FLUME_HOME/plugins.d
+  --use-plugins-classloader use custom plugin class loader to isolate plugin to a
+                            class loader.
   -Dproperty=value          sets a Java system property value
   -Xproperty=value          sets a Java -X option
 
@@ -292,6 +294,9 @@ while [ -n "$*" ] ; do
       opt_plugins_dirs=$1
       shift
       ;;
+    --use-plugins-classloader)
+      use_plugins_classloader=true
+      ;;
     -agentlib*)
       arr_java_props[arr_java_props_ct]=$arg
       ((++arr_java_props_ct))
@@ -318,8 +323,11 @@ while [ -n "$*" ] ; do
   esac
 done
 
-# append plugins path to args
-args="$args --plugins-path ${opt_plugins_dirs:-${FLUME_HOME}/plugins.d}"
+if [[ -n ${use_plugins_classloader} ]]
+then
+  # append plugins path to args
+  args="$args --plugins-path ${opt_plugins_dirs:-${FLUME_HOME}/plugins.d}"
+fi
 
 # make opt_conf absolute
 if [[ -n "$opt_conf" && -d "$opt_conf" ]]; then
@@ -358,16 +366,35 @@ else
   PLUGINS_DIRS="${FLUME_HOME}/plugins.d"
 fi
 
-unset plugin_native
+unset plugin_lib plugin_libext plugin_native
 for PLUGINS_DIR in $PLUGINS_DIRS; do
   if [[ -d ${PLUGINS_DIR} ]]; then
     for plugin in ${PLUGINS_DIR}/*; do
+      if [[ -d "$plugin/lib" ]]; then
+        plugin_lib="${plugin_lib}${plugin_lib+:}${plugin}/lib/*"
+      fi
+      if [[ -d "$plugin/libext" ]]; then
+        plugin_libext="${plugin_libext}${plugin_libext+:}${plugin}/libext/*"
+      fi
       if [[ -d "$plugin/native" ]]; then
         plugin_native="${plugin_native}${plugin_native+:}${plugin}/native"
       fi
     done
   fi
 done
+
+if [[ -z ${use_plugins_classloader} ]]
+then
+  if [[ -n "${plugin_lib}" ]]
+  then
+    FLUME_CLASSPATH="${FLUME_CLASSPATH}:${plugin_lib}"
+  fi
+
+  if [[ -n "${plugin_libext}" ]]
+  then
+    FLUME_CLASSPATH="${FLUME_CLASSPATH}:${plugin_libext}"
+  fi
+fi
 
 if [[ -n "${plugin_native}" ]]
 then
